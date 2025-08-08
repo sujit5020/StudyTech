@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GenAI Learning Assistant</title>
+    <script src="https://cdn.tailwindcss.com/3.4.16"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3b82f6',
+                        secondary: '#8b5cf6'
+                    },
+                    borderRadius: {
+                        'none': '0px',
+                        'sm': '4px',
+                        DEFAULT: '8px',
+                        'md': '12px',
+                        'lg': '16px',
+                        'xl': '20px',
+                        '2xl': '24px',
+                        '3xl': '32px',
+                        'full': '9999px',
+                        'button': '8px'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        :where([class^="ri-"])::before { content: "\f3c2"; }
+        .chat-window { transform: translateY(100%); transition: transform 0.3s ease-in-out; }
+        .chat-window.open { transform: translateY(0); }
+        .progress-bar { width: 0%; transition: width 0.3s ease; }
+        .upload-area.dragover { border-color: #3b82f6; background-color: #eff6ff; }
+        .typing-indicator::after { content: '...'; animation: typing 1.5s infinite; }
+        @keyframes typing {
+            0%, 33% { content: '.'; }
+            34%, 66% { content: '..'; }
+            67%, 100% { content: '...'; }
+        }
+        .quiz-card { transition: all 0.3s ease; }
+        .quiz-card:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        .section-fade { opacity: 0; transform: translateY(20px); transition: all 0.6s ease; }
+        .section-fade.visible { opacity: 1; transform: translateY(0); }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-sm sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <div class="font-['Pacifico'] text-2xl text-primary">learn</div>
+                </div>
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="#upload" class="text-gray-700 hover:text-primary transition-colors">Upload</a>
+                    <a href="#summary" class="text-gray-700 hover:text-primary transition-colors">Summary</a>
+                    <a href="#quiz" class="text-gray-700 hover:text-primary transition-colors">Quiz</a>
+                    <a href="#chat" class="text-gray-700 hover:text-primary transition-colors">Chat</a>
+                    <div class="w-6 h-6 flex items-center justify-center">
+                        <i class="ri-question-line text-gray-600 hover:text-primary cursor-pointer"></i>
+                    </div>
+                </div>
+                <div class="md:hidden">
+                    <button id="mobile-menu-btn" class="w-8 h-8 flex items-center justify-center">
+                        <i class="ri-menu-line text-gray-600"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="relative min-h-screen flex items-center justify-center overflow-hidden" style="background-image: url('https://readdy.ai/api/search-image?query=Modern%20digital%20learning%20environment%20with%20floating%20holographic%20AI%20elements%2C%20clean%20minimalist%20background%20with%20soft%20blue%20and%20purple%20gradients%2C%20futuristic%20educational%20technology%20interface%2C%20abstract%20geometric%20patterns%2C%20professional%20lighting%2C%20high-tech%20atmosphere%2C%20clean%20white%20space%20on%20left%20side%20for%20text%20overlay&width=1920&height=1080&seq=hero1&orientation=landscape'); background-size: cover; background-position: center;">
+        <div class="absolute inset-0 bg-gradient-to-r from-white/95 via-white/80 to-transparent"></div>
+        <div class="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid lg:grid-cols-2 gap-12 items-center">
+                <div class="space-y-8">
+                    <div class="space-y-6">
+                        <h1 class="text-5xl lg:text-6xl font-bold text-gray-900 leading-tight">
+                            GenAI Learning
+                            <span class="text-primary">Assistant</span>
+                        </h1>
+                        <p class="text-xl text-gray-600 leading-relaxed max-w-lg">
+                            Transform your learning materials into interactive experiences. Upload documents, get AI-powered summaries, take personalized quizzes, and chat with an intelligent tutor.
+                        </p>
+                    </div>
+                    <div class="flex flex-col sm:flex-row gap-4">
+                        <button class="bg-primary text-white px-8 py-4 !rounded-button font-semibold hover:bg-blue-600 transition-colors whitespace-nowrap">
+                            Get Started Now
+                        </button>
+                        <button class="border border-gray-300 text-gray-700 px-8 py-4 !rounded-button font-semibold hover:bg-gray-50 transition-colors whitespace-nowrap">
+                            Watch Demo
+                        </button>
+                    </div>
+                    <div class="flex items-center space-x-8 pt-4">
+                        <div class="flex items-center space-x-2">
+                            <div class="w-5 h-5 flex items-center justify-center">
+                                <i class="ri-file-pdf-line text-red-500"></i>
+                            </div>
+                            <span class="text-sm text-gray-600">PDF Support</span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <div class="w-5 h-5 flex items-center justify-center">
+                                <i class="ri-slideshow-line text-orange-500"></i>
+                            </div>
+                            <span class="text-sm text-gray-600">PPT Support</span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <div class="w-5 h-5 flex items-center justify-center">
+                                <i class="ri-mic-line text-green-500"></i>
+                            </div>
+                            <span class="text-sm text-gray-600">Voice Input</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+   <div class="text-center">
+    <h1 class="text-4xl font-bold text-gray-800 mb-2">Upload Your Learning Materials</h1>
+    <p class="text-lg text-gray-600 mb-8">Drag and drop your PDF or PowerPoint files to get started</p>
+
+    <!-- Drop Zone -->
+    <div id="drop-area" class="border-2 border-dashed border-blue-400 bg-white rounded-xl w-full max-w-xl p-10 text-center transition hover:shadow-xl cursor-pointer mx-auto">
+      <div class="flex flex-col items-center space-y-4">
+        <div class="bg-blue-100 text-blue-500 p-4 rounded-full">
+          <i class="fas fa-cloud-upload-alt fa-2x"></i>
+        </div>
+        <p class="text-lg font-semibold text-gray-700">Drop your files here</p>
+        <p class="text-sm text-gray-500">or click to browse your computer</p>
+        <input type="file" id="fileElem" accept=".pdf,.ppt,.pptx" class="hidden"/>
+        <button onclick="fileElem.click()" class="mt-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">Choose Files</button>
+        <div class="flex items-center justify-center space-x-6 text-sm mt-4 text-gray-500">
+          <div><i class="fas fa-file-pdf text-red-500"></i> PDF</div>
+          <div><i class="fas fa-file-powerpoint text-orange-500"></i> PowerPoint</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Upload Status -->
+    <div id="uploadStatus" class="mt-6 text-blue-600 font-medium hidden">Uploading and summarizing...</div>
+
+    <!-- Summary Output -->
+    <div id="summaryBox" class="hidden bg-white mt-10 p-6 rounded-lg shadow-md w-full max-w-3xl mx-auto">
+      <h2 class="text-2xl font-bold mb-4">📝 Summary</h2>
+      <p id="summaryText" class="text-gray-700 whitespace-pre-wrap text-left"></p>
+    </div>
+  </div>
+
+    <!-- Quiz Section -->
+    <section id="quiz" class="py-10">
+    <div class="max-w-4xl mx-auto bg-white p-8 rounded-xl shadow-md">
+      <h2 class="text-3xl font-bold text-center mb-4">AI Quiz Generator</h2>
+      
+
+      <!-- Text Input -->
+      <textarea id="user-input" class="w-full p-4 border rounded mb-4" rows="6" placeholder="Enter topic or content..."></textarea>
+      
+      <!-- Generate Button -->
+      <div class="text-center mb-6">
+        <button id="generate-btn" class="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700">Generate Quiz</button>
+      </div>
+
+      <!-- Quiz Output -->
+      <div id="quiz-container"></div>
+
+      <!-- Submit Button -->
+      <div class="text-center mt-6 hidden" id="submit-section">
+        <button id="submit-btn" class="bg-blue-700 text-white px-6 py-2 rounded hover:bg-blue-800">Submit Quiz</button>
+        <div id="score-output" class="mt-4 text-lg font-semibold text-green-600"></div>
+      </div>
+    </div>
+  </section>
+
+
+    <!-- Chat Section -->
+    <section id="chat" class="py-20 bg-gray-50">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-bold text-gray-900 mb-4">AI Learning Assistant</h2>
+                <p class="text-xl text-gray-600">Ask questions and get personalized tutoring based on your materials</p>
+            </div>
+            
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                <div class="bg-gradient-to-r from-primary to-secondary p-6">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
+                            <i class="ri-robot-line text-white text-xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-white font-semibold">AI Tutor</h3>
+                            <p class="text-white/80 text-sm">Ready to help with your learning</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="h-96 overflow-y-auto p-6 space-y-4" id="chat-messages">
+                    <div class="flex items-start space-x-3">
+                        <div class="w-8 h-8 bg-primary rounded-full flex items-center justify-center flex-shrink-0">
+                            <i class="ri-robot-line text-white text-sm"></i>
+                        </div>
+                        <div class="bg-gray-100 rounded-lg px-4 py-3 max-w-xs">
+                            <p class="text-gray-800">Hello! I'm your AI learning assistant. I've analyzed your uploaded document about Machine Learning. What would you like to know?</p>
+                            <span class="text-xs text-gray-500 mt-1 block">2:30 PM</span>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-start space-x-3 justify-end">
+                        <div class="bg-primary rounded-lg px-4 py-3 max-w-xs">
+                            <p class="text-white">Can you explain the difference between supervised and unsupervised learning?</p>
+                            <span class="text-xs text-blue-200 mt-1 block">2:31 PM</span>
+                        </div>
+                        <div class="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center flex-shrink-0">
+                            <i class="ri-user-line text-gray-600 text-sm"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-start space-x-3">
+                        <div class="w-8 h-8 bg-primary rounded-full flex items-center justify-center flex-shrink-0">
+                            <i class="ri-robot-line text-white text-sm"></i>
+                        </div>
+                        <div class="bg-gray-100 rounded-lg px-4 py-3 max-w-md">
+                            <p class="text-gray-800">Great question! Based on your document:</p>
+                            <p class="text-gray-800 mt-2"><strong>Supervised Learning:</strong> Uses labeled training data to learn patterns and make predictions on new, unseen data. Examples include classification and regression tasks.</p>
+                            <p class="text-gray-800 mt-2"><strong>Unsupervised Learning:</strong> Finds hidden patterns in data without labeled examples. Common techniques include clustering and dimensionality reduction.</p>
+                            <span class="text-xs text-gray-500 mt-1 block">2:32 PM</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="border-t border-gray-100 p-6">
+                    <div class="flex items-center space-x-4">
+                        <div class="flex-1 relative">
+                            <input type="text" id="chat-input" placeholder="Ask a question about your learning material..." class="w-full border border-gray-300 rounded-lg px-4 py-3 pr-12 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+                            <button id="voice-btn" class="absolute right-3 top-1/2 transform -translate-y-1/2 w-6 h-6 flex items-center justify-center text-gray-400 hover:text-primary transition-colors">
+                                <i class="ri-mic-line"></i>
+                            </button>
+                        </div>
+                        <button id="send-btn" class="bg-primary text-white px-6 py-3 !rounded-button font-medium hover:bg-blue-600 transition-colors whitespace-nowrap">
+                            Send
+                        </button>
+                    </div>
+                    <div class="flex items-center justify-between mt-3">
+                        <div class="flex items-center space-x-4">
+                            <div class="flex items-center space-x-2">
+                                <div class="w-4 h-4 flex items-center justify-center">
+                                    <i class="ri-mic-line text-gray-400"></i>
+                                </div>
+                                <span class="text-xs text-gray-500">Voice input available</span>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <div class="w-4 h-4 flex items-center justify-center">
+                                    <i class="ri-keyboard-line text-gray-400"></i>
+                                </div>
+                                <span class="text-xs text-gray-500">Press Enter to send</span>
+                            </div>
+                        </div>
+                        <span class="text-xs text-gray-500">AI responses based on your uploaded content</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="py-20 bg-white">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-bold text-gray-900 mb-4">Powerful Learning Features</h2>
+                <p class="text-xl text-gray-600">Everything you need for effective AI-powered learning</p>
+            </div>
+            
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div class="text-center p-8 rounded-2xl bg-gray-50 hover:bg-white hover:shadow-lg transition-all">
+                    <div class="w-16 h-16 mx-auto mb-6 bg-primary/10 rounded-full flex items-center justify-center">
+                        <i class="ri-brain-line text-3xl text-primary"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold text-gray-900 mb-3">AI-Powered Summaries</h3>
+                    <p class="text-gray-600">Get intelligent, concise summaries that capture the key concepts and learning objectives from your materials.</p>
+                </div>
+                
+                <div class="text-center p-8 rounded-2xl bg-gray-50 hover:bg-white hover:shadow-lg transition-all">
+                    <div class="w-16 h-16 mx-auto mb-6 bg-secondary/10 rounded-full flex items-center justify-center">
+                        <i class="ri-question-answer-line text-3xl text-secondary"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold text-gray-900 mb-3">Interactive Quizzes</h3>
+                    <p class="text-gray-600">Automatically generated quizzes with multiple choice and short answer questions to reinforce your learning.</p>
+                </div>
+                
+                <div class="text-center p-8 rounded-2xl bg-gray-50 hover:bg-white hover:shadow-lg transition-all">
+                    <div class="w-16 h-16 mx-auto mb-6 bg-green-100 rounded-full flex items-center justify-center">
+                        <i class="ri-chat-voice-line text-3xl text-green-600"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold text-gray-900 mb-3">Voice Interaction</h3>
+                    <p class="text-gray-600">Ask questions using voice input and get spoken responses for a natural, conversational learning experience.</p>
+                </div>
+                
+                <div class="text-center p-8 rounded-2xl bg-gray-50 hover:bg-white hover:shadow-lg transition-all">
+                    <div class="w-16 h-16 mx-auto mb-6 bg-orange-100 rounded-full flex items-center justify-center">
+                        <i class="ri-file-text-line text-3xl text-orange-600"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold text-gray-900 mb-3">Multi-Format Support</h3>
+                    <p class="text-gray-600">Upload PDF documents and PowerPoint presentations to create comprehensive learning experiences.</p>
+                </div>
+                
+                <div class="text-center p-8 rounded-2xl bg-gray-50 hover:bg-white hover:shadow-lg transition-all">
+                    <div class="w-16 h-16 mx-auto mb-6 bg-purple-100 rounded-full flex items-center justify-center">
+                        <i class="ri-graduation-cap-line text-3xl text-purple-600"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold text-gray-900 mb-3">Personalized Tutoring</h3>
+                    <p class="text-gray-600">Get personalized explanations and guidance based on your specific learning materials and progress.</p>
+                </div>
+                
+                <div class="text-center p-8 rounded-2xl bg-gray-50 hover:bg-white hover:shadow-lg transition-all">
+                    <div class="w-16 h-16 mx-auto mb-6 bg-blue-100 rounded-full flex items-center justify-center">
+                        <i class="ri-dashboard-line text-3xl text-blue-600"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold text-gray-900 mb-3">Progress Tracking</h3>
+                    <p class="text-gray-600">Monitor your learning progress with detailed analytics and performance insights across all activities.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="py-20 bg-gradient-to-r from-primary to-secondary">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h2 class="text-4xl font-bold text-white mb-6">Ready to Transform Your Learning?</h2>
+            <p class="text-xl text-blue-100 mb-8 max-w-2xl mx-auto">
+                Join thousands of students and professionals who are already using AI to accelerate their learning journey.
+            </p>
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                <button class="bg-white text-primary px-8 py-4 !rounded-button font-semibold hover:bg-gray-100 transition-colors whitespace-nowrap">
+                    Start Learning Now
+                </button>
+                <button class="border-2 border-white text-white px-8 py-4 !rounded-button font-semibold hover:bg-white/10 transition-colors whitespace-nowrap">
+                    View Pricing
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white py-16">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid md:grid-cols-4 gap-8">
+                <div class="md:col-span-2">
+                    <div class="font-['Pacifico'] text-2xl text-primary mb-4">logo</div>
+                    <p class="text-gray-400 mb-6 max-w-md">
+                        Empowering learners worldwide with AI-driven educational tools that make learning more effective, engaging, and personalized.
+                    </p>
+                    <div class="flex space-x-4">
+                        <div class="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-gray-700 cursor-pointer transition-colors">
+                            <i class="ri-twitter-line"></i>
+                        </div>
+                        <div class="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-gray-700 cursor-pointer transition-colors">
+                            <i class="ri-linkedin-line"></i>
+                        </div>
+                        <div class="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-gray-700 cursor-pointer transition-colors">
+                            <i class="ri-github-line"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">Product</h3>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Features</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Pricing</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">API</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Documentation</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">Support</h3>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Help Center</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Contact Us</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Privacy Policy</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Terms of Service</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="border-t border-gray-800 mt-12 pt-8 text-center">
+                <p class="text-gray-400">&copy; 2025 GenAI Learning Assistant. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Back to Top Button -->
+    <button id="back-to-top" class="fixed bottom-8 right-8 bg-primary text-white w-12 h-12 rounded-full shadow-lg hover:bg-blue-600 transition-all opacity-0 pointer-events-none">
+        <div class="w-full h-full flex items-center justify-center">
+            <i class="ri-arrow-up-line"></i>
+        </div>
+    </button>
+
+    <!-- Mobile Menu -->
+    <div id="mobile-menu" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden">
+        <div class="fixed right-0 top-0 h-full w-64 bg-white shadow-lg transform translate-x-full transition-transform">
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-8">
+                    <div class="font-['Pacifico'] text-xl text-primary">logo</div>
+                    <button id="close-mobile-menu" class="w-8 h-8 flex items-center justify-center">
+                        <i class="ri-close-line text-gray-600"></i>
+                    </button>
+                </div>
+                <nav class="space-y-4">
+                    <a href="#upload" class="block text-gray-700 hover:text-primary transition-colors py-2">Upload</a>
+                    <a href="#summary" class="block text-gray-700 hover:text-primary transition-colors py-2">Summary</a>
+                    <a href="#quiz" class="block text-gray-700 hover:text-primary transition-colors py-2">Quiz</a>
+                    <a href="#chat" class="block text-gray-700 hover:text-primary transition-colors py-2">Chat</a>
+                    <a href="#" class="block text-gray-700 hover:text-primary transition-colors py-2">Help</a>
+                </nav>
+            </div>
+        </div>
+    </div>
+
+    <script id="navigation-handler">
+        document.addEventListener('DOMContentLoaded', function() {
+            const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+            const mobileMenu = document.getElementById('mobile-menu');
+            const closeMobileMenu = document.getElementById('close-mobile-menu');
+            const mobileMenuPanel = mobileMenu.querySelector('.transform');
+            mobileMenuBtn.addEventListener('click', function() {
+                mobileMenu.classList.remove('hidden');
+                setTimeout(() => {
+                    mobileMenuPanel.classList.remove('translate-x-full');
+                }, 10);
+            });
+
+            function closeMobileMenuHandler() {
+                mobileMenuPanel.classList.add('translate-x-full');
+                setTimeout(() => {
+                    mobileMenu.classList.add('hidden');
+                }, 300);
+            }
+
+            closeMobileMenu.addEventListener('click', closeMobileMenuHandler);
+            mobileMenu.addEventListener('click', function(e) {
+                if (e.target === mobileMenu) {
+                    closeMobileMenuHandler();
+                }
+            });
+
+            const navLinks = document.querySelectorAll('a[href^="#"]');
+            navLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const targetId = this.getAttribute('href').substring(1);
+                    const targetElement = document.getElementById(targetId);
+                    if (targetElement) {
+                        targetElement.scrollIntoView({ behavior: 'smooth' });
+                        closeMobileMenuHandler();
+                    }
+                });
+            });
+        });
+    </script>
+    
+    <!-- Add this in your <head> -->
+<script>
+const dropArea = document.getElementById('drop-area');
+const fileInput = document.getElementById('fileElem');
+const uploadStatus = document.getElementById('uploadStatus');
+const summaryBox = document.getElementById('summaryBox');
+const summaryText = document.getElementById('summaryText');
+
+// Drag events
+['dragenter', 'dragover'].forEach(eventName => {
+  dropArea.addEventListener(eventName, (e) => {
+    e.preventDefault();
+    dropArea.classList.add('ring', 'ring-blue-300', 'bg-blue-50');
+  });
+});
+
+['dragleave', 'drop'].forEach(eventName => {
+  dropArea.addEventListener(eventName, (e) => {
+    e.preventDefault();
+    dropArea.classList.remove('ring', 'ring-blue-300', 'bg-blue-50');
+  });
+});
+
+// Drop event
+dropArea.addEventListener('drop', (e) => {
+  const file = e.dataTransfer.files[0];
+  if (file) {
+    uploadFile(file);
+  }
+});
+
+// File select via click
+fileInput.addEventListener('change', () => {
+  const file = fileInput.files[0];
+  if (file) {
+    uploadFile(file);
+  }
+});
+
+// Upload + fetch summary
+function uploadFile(file) {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  uploadStatus.classList.remove("hidden");
+  summaryBox.classList.add("hidden");
+
+  fetch("/upload", {
+    method: "POST",
+    body: formData
+  })
+  .then(res => {
+    if (!res.ok) throw new Error("Server returned error " + res.status);
+    return res.json();
+  })
+  .then(data => {
+    uploadStatus.classList.add("hidden");
+    if (data.summary) {
+      summaryText.innerText = data.summary;
+      summaryBox.classList.remove("hidden");
+    } else {
+      alert("Summary not generated. Try again.");
+    }
+  })
+  .catch(err => {
+    uploadStatus.classList.add("hidden");
+    alert("Upload failed: " + err.message);
+  });
+}
+
+
+
+</script>
+
+    <script>
+    let quizData = [];
+    let quizMode = "mcq";
+
+
+    document.getElementById("generate-btn").onclick = async () => {
+      const text = document.getElementById("user-input").value;
+      if (!text.trim()) return alert("Please enter text or topic");
+
+      const res = await fetch("/generate_quiz", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mode: quizMode, text })
+      });
+
+      const data = await res.json();
+      quizData = data.questions;
+      renderQuiz();
+      document.getElementById("submit-section").classList.remove("hidden");
+    };
+
+    function renderQuiz() {
+      const container = document.getElementById("quiz-container");
+      container.innerHTML = "";
+      quizData.forEach((q, idx) => {
+        const div = document.createElement("div");
+        div.className = "mb-6";
+        div.innerHTML = `<h4 class="font-medium mb-2">${idx + 1}. ${q.question}</h4>`;
+
+        if (quizMode === "mcq") {
+          div.innerHTML += q.options.map((opt, i) => `
+            <label class="block">
+              <input type="radio" name="q${idx}" value="${String.fromCharCode(65 + i)}" class="mr-2">
+              ${String.fromCharCode(65 + i)}. ${opt}
+            </label>`).join("");
+        } else {
+          div.innerHTML += `<input type="text" name="q${idx}" class="w-full border rounded p-2 mt-2" placeholder="Your answer...">`;
+        }
+
+        container.appendChild(div);
+      });
+    }
+
+    document.getElementById("submit-btn").onclick = () => {
+      let score = 0;
+      quizData.forEach((q, idx) => {
+        const ans = document.querySelector(`[name="q${idx}"]:checked`)?.value ||
+                    document.querySelector(`[name="q${idx}"]`)?.value.trim();
+        if (ans && ans.toLowerCase() === q.answer.toLowerCase()) {
+          score++;
+        }
+      });
+      document.getElementById("score-output").innerText = `Score: ${score} / ${quizData.length}`;
+    };
+  </script>
+
+    <script id="chat-handler">
+        document.addEventListener('DOMContentLoaded', function() {
+            const chatInput = document.getElementById('chat-input');
+            const sendBtn = document.getElementById('send-btn');
+            const voiceBtn = document.getElementById('voice-btn');
+            const chatMessages = document.getElementById('chat-messages');
+
+            let isRecording = false;
+
+            sendBtn.addEventListener('click', sendMessage);
+            chatInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    sendMessage();
+                }
+            });
+
+            voiceBtn.addEventListener('click', function() {
+                if (!isRecording) {
+                    startRecording();
+                } else {
+                    stopRecording();
+                }
+            });
+            function sendMessage() {
+                const message = chatInput.value.trim();
+                if (message) {
+                    addMessage(message, 'user');
+                    chatInput.value = '';
+                    
+                    setTimeout(() => {
+                        addMessage("That's a great question! Let me analyze your document to provide a detailed answer...", 'ai');
+                    }, 1000);
+                }
+            }
+
+            function addMessage(text, sender) {
+                const time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                const messageDiv = document.createElement('div');
+                
+                if (sender === 'user') {
+                    messageDiv.innerHTML = `
+                        <div class="flex items-start space-x-3 justify-end">
+                            <div class="bg-primary rounded-lg px-4 py-3 max-w-xs">
+                                <p class="text-white">${text}</p>
+                                <span class="text-xs text-blue-200 mt-1 block">${time}</span>
+                            </div>
+                            <div class="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center flex-shrink-0">
+                                <i class="ri-user-line text-gray-600 text-sm"></i>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    messageDiv.innerHTML = `
+                        <div class="flex items-start space-x-3">
+                            <div class="w-8 h-8 bg-primary rounded-full flex items-center justify-center flex-shrink-0">
+                                <i class="ri-robot-line text-white text-sm"></i>
+                            </div>
+                            <div class="bg-gray-100 rounded-lg px-4 py-3 max-w-md">
+                                <p class="text-gray-800">${text}</p>
+                                <span class="text-xs text-gray-500 mt-1 block">${time}</span>
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                chatMessages.appendChild(messageDiv);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+
+            function startRecording() {
+                isRecording = true;
+                voiceBtn.innerHTML = '<i class="ri-stop-line text-red-500"></i>';
+                chatInput.placeholder = 'Listening...';
+            }
+
+            function stopRecording() {
+                isRecording = false;
+                voiceBtn.innerHTML = '<i class="ri-mic-line"></i>';
+                chatInput.placeholder = 'Ask a question about your learning material...';
+                chatInput.value = 'What are the main applications of supervised learning?';
+            }
+        });
+    </script>
+
+    <script id="scroll-handler">
+        document.addEventListener('DOMContentLoaded', function() {
+            const backToTopBtn = document.getElementById('back-to-top');
+
+            window.addEventListener('scroll', function() {
+                if (window.pageYOffset > 300) {
+                    backToTopBtn.classList.remove('opacity-0', 'pointer-events-none');
+                    backToTopBtn.classList.add('opacity-100');
+                } else {
+                    backToTopBtn.classList.add('opacity-0', 'pointer-events-none');
+                    backToTopBtn.classList.remove('opacity-100');
+                }
+            });
+
+            backToTopBtn.addEventListener('click', function() {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+
+            const sections = document.querySelectorAll('.section-fade');
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                    }
+                });
+            }, { threshold: 0.1 });
+            sections.forEach(section => {
+                observer.observe(section);
+            });
+        });
+    </script>
+</body>
+</html>
